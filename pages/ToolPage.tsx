@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { FeedbackRating } from '../components/FeedbackRating';
+import { TrainingFeedback } from '../components/TrainingFeedback';
 import { TOOLS } from '../constants';
 import { generateClarityResponse, extractConversationMetadata, buildUserContext } from '../services/geminiService';
 import { personalizationService } from '../services/personalizationService';
@@ -24,6 +26,7 @@ const ToolPage = () => {
   const [copied, setCopied] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [insights, setInsights] = useState<UserInsight[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -59,8 +62,9 @@ const ToolPage = () => {
       ]);
 
       setResult(response || "Sorry, I couldn't generate a response.");
-      
-      await dbService.saveResult(user.id, {
+
+      // Save conversation and get the ID for feedback/training
+      const savedResult = await dbService.saveResult(user.id, {
         toolId: tool.id,
         input: input,
         output: response || '',
@@ -69,9 +73,14 @@ const ToolPage = () => {
         triggers: metadata?.triggers
       });
 
-      // TRIGGER LIVE PERSONALIZATION: 
-      // Refresh user profile metadata immediately if they have enough history
+      // Get the conversation ID for feedback
       const history = await dbService.getResults(user.id);
+      if (history.length > 0) {
+        setCurrentConversationId(history[0].id);
+      }
+
+      // TRIGGER LIVE PERSONALIZATION:
+      // Refresh user profile metadata immediately if they have enough history
       if (history.length % 3 === 0) { // Every 3 sessions, refresh profile
         personalizationService.refreshUserProfile(user.id, history);
       }
@@ -85,8 +94,9 @@ const ToolPage = () => {
 
   const handleFeedback = async (rating: number) => {
     setFeedbackGiven(true);
-    // In a real app we'd save this to the conversation record
-    console.log(`Rating for session: ${rating}`);
+    if (currentConversationId) {
+      await dbService.saveRating(currentConversationId, rating);
+    }
   };
 
   const copyToClipboard = () => {
@@ -180,38 +190,30 @@ const ToolPage = () => {
                <div className="whitespace-pre-wrap text-[#3A3A3A] leading-relaxed text-lg">
                   {result}
                </div>
-               <div className="mt-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <Button 
-                    variant="secondary" 
-                    onClick={copyToClipboard} 
+               <div className="mt-8 flex justify-between items-center">
+                  <Button
+                    variant="secondary"
+                    onClick={copyToClipboard}
                     className="px-6 py-2.5 flex items-center space-x-2"
                   >
                     {copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
                     <span>{copied ? 'Copied!' : 'Copy Response'}</span>
                   </Button>
-
-                  <div className="flex items-center space-x-4">
-                    <span className="text-xs font-bold text-[#6B6B6B] uppercase">Was this helpful?</span>
-                    <div className="flex space-x-2">
-                      {[1, 2, 3, 4, 5].map(rating => (
-                        <button 
-                          key={rating}
-                          disabled={feedbackGiven}
-                          onClick={() => handleFeedback(rating)}
-                          className={`w-8 h-8 rounded-full border border-[#E5E5E5] flex items-center justify-center text-sm font-bold transition-colors ${feedbackGiven ? 'bg-[#FAF8F5] text-[#E5E5E5] border-transparent' : 'hover:border-[#E8956B] hover:text-[#E8956B]'}`}
-                        >
-                          {rating}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                </div>
-               {feedbackGiven && (
-                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 text-xs text-[#7AB8B8] font-bold">
-                   Thank you for your feedback. We're learning from every interaction.
-                 </motion.div>
-               )}
             </Card>
+
+            {/* Feedback Rating Component */}
+            {!feedbackGiven && (
+              <FeedbackRating onRate={handleFeedback} />
+            )}
+
+            {/* Training Feedback (only shows if TRAINING_MODE=true) */}
+            {currentConversationId && (
+              <TrainingFeedback
+                conversationId={currentConversationId}
+                onComplete={() => console.log('Training feedback completed')}
+              />
+            )}
           </motion.section>
         )}
       </AnimatePresence>
