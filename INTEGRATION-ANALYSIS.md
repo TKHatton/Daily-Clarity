@@ -247,7 +247,7 @@ GEMINI_API_KEY=your-gemini-key
 ```bash
 # Supabase
 SUPABASE_URL=your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_ANON_KEY=your-anon-key  # This is your Supabase publishable API key
 
 # For background jobs only (keep secret!)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key

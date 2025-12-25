@@ -69,13 +69,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    if (!isSupabaseConfigured) throw new Error("Database not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY.");
+    if (!isSupabaseConfigured) throw new Error("Database not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY (Supabase publishable API key).");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    if (!isSupabaseConfigured) throw new Error("Database not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY.");
+    if (!isSupabaseConfigured) throw new Error("Database not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY (Supabase publishable API key).");
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

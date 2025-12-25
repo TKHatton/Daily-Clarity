@@ -16,7 +16,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isConfigured) {
-      setError("Database is not connected. Please set SUPABASE_URL and SUPABASE_ANON_KEY.");
+      setError("Database is not connected. Please set SUPABASE_URL and SUPABASE_ANON_KEY (Supabase publishable API key).");
       return;
     }
     setError('');
@@ -41,7 +41,7 @@ const Login = () => {
       <Card>
         {!isConfigured && (
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
-            <strong>Development Note:</strong> Supabase environment variables are missing. Auth and database features require SUPABASE_URL and SUPABASE_ANON_KEY.
+            <strong>Development Note:</strong> Supabase environment variables are missing. Auth and database features require SUPABASE_URL and SUPABASE_ANON_KEY (Supabase publishable API key).
           </div>
         )}
         

@@ -16,4 +16,4 @@
 # Environment variables (set these in Netlify dashboard: Site settings > Environment variables)
 # GEMINI_API_KEY
 # SUPABASE_URL
-# SUPABASE_ANON_KEY
+# SUPABASE_ANON_KEY (Supabase publishable API key)
