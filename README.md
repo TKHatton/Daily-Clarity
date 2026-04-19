@@ -76,31 +76,51 @@ A structured 2-minute reset process. Answer a few questions, get grounded, ident
 └── supabase-schema.sql  # Database schema
 ```
 
+## Two Modes
+
+Daily Clarity supports two modes:
+
+| Mode | Storage | Cost | Features |
+|------|---------|------|----------|
+| **Free (Local)** | Browser localStorage | $0 | All tools, no account needed, data stays on device |
+| **Cloud (Supabase)** | PostgreSQL | $0-10/mo | User accounts, cross-device sync, personalization history |
+
+**Free mode is the default.** Just add your Gemini API key and go.
+
 ## Setup
 
 ### Prerequisites
 - Node.js 18+
-- Supabase account (free tier works)
 - Google AI API key (Gemini)
+- Supabase account (optional - only for cloud mode)
 
 ### 1. Install dependencies
 ```bash
 npm install
 ```
 
-### 2. Set up Supabase
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to SQL Editor and run the contents of `supabase-schema.sql`
-3. Go to Settings > API and copy your Project URL and anon key
-
-### 3. Configure environment variables
+### 2. Configure environment variables
 
 Create `.env.local`:
+
+**For FREE mode (localStorage only):**
+```
+GEMINI_API_KEY=your_gemini_api_key
+
+# Supabase not needed - app works with localStorage
+```
+
+**For CLOUD mode (Supabase):**
 ```
 GEMINI_API_KEY=your_gemini_api_key
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
 ```
+
+### 3. (Cloud mode only) Set up Supabase
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to SQL Editor and run the contents of `supabase-schema.sql`
+3. Go to Settings > API and copy your Project URL and anon key
 
 ### 4. Run locally
 ```bash

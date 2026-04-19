@@ -1,14 +1,32 @@
 import { User, ToolResult, UserInsight } from '../types';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { localStorageService } from './localStorageService';
+
+/**
+ * Database service with automatic fallback to localStorage
+ *
+ * - If Supabase is configured: uses cloud database (paid/pro mode)
+ * - If Supabase is NOT configured: uses localStorage (free mode)
+ *
+ * This allows the app to work completely offline with $0 infrastructure cost.
+ */
+
+// Use localStorage if Supabase isn't configured
+const useLocalStorage = !isSupabaseConfigured;
 
 export const dbService = {
   getProfile: async (userId: string): Promise<User | null> => {
+    // Use localStorage if Supabase isn't configured
+    if (useLocalStorage) {
+      return localStorageService.getProfile(userId);
+    }
+
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    
+
     if (error) return null;
     return {
       ...data,
@@ -16,11 +34,15 @@ export const dbService = {
       commonThemes: data.common_themes,
       stressTriggers: data.stress_triggers,
       usageCount: data.total_sessions || 0,
-      subscriptionStatus: 'Active' // Mapping for UI
+      subscriptionStatus: 'Active'
     };
   },
 
   updateProfile: async (userId: string, updates: Partial<User>) => {
+    if (useLocalStorage) {
+      return localStorageService.updateProfile(userId, updates);
+    }
+
     const dbUpdates: any = {};
     if (updates.communicationStyle) dbUpdates.communication_style = updates.communicationStyle;
     if (updates.commonThemes) dbUpdates.common_themes = updates.commonThemes;
@@ -35,6 +57,10 @@ export const dbService = {
   },
 
   saveResult: async (userId: string, result: Omit<ToolResult, 'id' | 'timestamp'> & { theme?: string; emotion?: string; triggers?: string[] }) => {
+    if (useLocalStorage) {
+      return localStorageService.saveResult(userId, result);
+    }
+
     const { error } = await supabase
       .from('conversations')
       .insert({
@@ -46,7 +72,7 @@ export const dbService = {
         mood_before: result.emotion,
         tags: result.triggers
       });
-    
+
     if (!error) {
       const profile = await dbService.getProfile(userId);
       if (profile) {
@@ -57,12 +83,16 @@ export const dbService = {
   },
 
   getResults: async (userId: string): Promise<ToolResult[]> => {
+    if (useLocalStorage) {
+      return localStorageService.getResults(userId);
+    }
+
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     if (error) return [];
     return data.map(item => ({
       id: item.id,
@@ -77,6 +107,10 @@ export const dbService = {
   },
 
   saveRating: async (resultId: string, rating: number) => {
+    if (useLocalStorage) {
+      return localStorageService.saveRating(resultId, rating);
+    }
+
     await supabase
       .from('conversations')
       .update({ helpful_rating: rating })
@@ -84,6 +118,10 @@ export const dbService = {
   },
 
   saveInsight: async (userId: string, insight: Omit<UserInsight, 'id' | 'userId' | 'timestamp'>) => {
+    if (useLocalStorage) {
+      return localStorageService.saveInsight(userId, insight);
+    }
+
     const { data, error } = await supabase
       .from('user_insights')
       .insert({
@@ -99,17 +137,21 @@ export const dbService = {
       })
       .select()
       .single();
-    
+
     return error ? null : data;
   },
 
   getInsights: async (userId: string): Promise<UserInsight[]> => {
+    if (useLocalStorage) {
+      return localStorageService.getInsights(userId);
+    }
+
     const { data, error } = await supabase
       .from('user_insights')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     if (error) return [];
     return data.map(item => ({
       id: item.id,
@@ -122,5 +164,8 @@ export const dbService = {
       confidence: item.confidence_score,
       timestamp: new Date(item.created_at).getTime()
     }));
-  }
+  },
+
+  // Expose whether we're in local mode
+  isLocalMode: () => useLocalStorage,
 };

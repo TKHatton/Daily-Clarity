@@ -2,11 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { dbService } from '../services/dbService';
+import { localStorageService } from '../services/localStorageService';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isConfigured: boolean;
+  isLocalMode: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -18,12 +20,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Determine if we're in local-only mode (no Supabase)
+  const isLocalMode = !isSupabaseConfigured;
+
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setIsLoading(false);
+    // LOCAL MODE: Auto-login with localStorage user (no auth needed)
+    if (isLocalMode) {
+      const initLocalUser = async () => {
+        const localUser = await localStorageService.getProfile();
+        setUser(localUser);
+        setIsLoading(false);
+      };
+      initLocalUser();
       return;
     }
 
+    // CLOUD MODE: Use Supabase auth
     const checkUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -66,16 +78,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isLocalMode]);
 
   const login = async (email: string, password: string) => {
-    if (!isSupabaseConfigured) throw new Error("Database not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY (Supabase publishable API key).");
+    // In local mode, just load the local user
+    if (isLocalMode) {
+      const localUser = await localStorageService.getProfile();
+      setUser(localUser);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    if (!isSupabaseConfigured) throw new Error("Database not configured. Please add SUPABASE_URL and SUPABASE_ANON_KEY (Supabase publishable API key).");
+    // In local mode, update the local user's name
+    if (isLocalMode) {
+      await localStorageService.updateProfile('', { name });
+      const localUser = await localStorageService.getProfile();
+      setUser(localUser);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -83,9 +108,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: { full_name: name }
       }
     });
-    
+
     if (error) throw error;
-    
+
     if (data.user) {
       setUser({
         id: data.user.id,
@@ -98,14 +123,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (isSupabaseConfigured) {
+    if (!isLocalMode) {
       await supabase.auth.signOut();
     }
+    // In local mode, we don't really "log out" - just clear user state
+    // Data persists in localStorage for next visit
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isConfigured: isSupabaseConfigured, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isConfigured: isSupabaseConfigured, isLocalMode, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

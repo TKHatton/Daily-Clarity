@@ -7,7 +7,7 @@ import { HeroIllustration } from '../components/Illustrations';
 import { motion } from 'framer-motion';
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, isLocalMode } = useAuth();
 
   return (
     <div className="pt-12">
@@ -28,7 +28,7 @@ const Home = () => {
           >
             Daily Clarity is your personal thinking assistant. Whether you need to dump mental clutter, say something difficult, or make a big decision—we help you find the way forward.
           </motion.p>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -36,10 +36,11 @@ const Home = () => {
           >
             <Link to={user ? "/dashboard" : "/signup"}>
               <Button className="text-lg">
-                {user ? "Go to Dashboard" : "Start Your Free Week"}
+                {user ? "Go to Dashboard" : (isLocalMode ? "Start Using Now" : "Start Your Free Week")}
               </Button>
             </Link>
-            {!user && <p className="text-sm text-[#6B6B6B]">No credit card required to explore.</p>}
+            {!user && !isLocalMode && <p className="text-sm text-[#6B6B6B]">No credit card required to explore.</p>}
+            {isLocalMode && <p className="text-sm text-[#6B6B6B]">Free forever. Your data stays on this device.</p>}
           </motion.div>
         </div>
         
@@ -66,16 +67,31 @@ const Home = () => {
 
       <div className="bg-white rounded-2xl border border-[#E5E5E5] p-12 text-center max-w-[800px] mx-auto overflow-hidden relative">
         <div className="relative z-10">
-          <h2 className="text-3xl font-bold text-[#2D2D2D] mb-6">Simple, calm pricing</h2>
-          <div className="text-5xl font-bold text-[#E8956B] mb-4">$7<span className="text-xl text-[#6B6B6B]">/month</span></div>
-          <p className="text-[#6B6B6B] mb-8">Unrestricted access to all tools. Cancel anytime.</p>
-          <Link to={user ? "/dashboard" : "/signup"}>
-            <Button variant="secondary" className="mx-auto">
-              {user ? "View Your Tools" : "Get Started Now"}
-            </Button>
-          </Link>
+          {isLocalMode ? (
+            <>
+              <h2 className="text-3xl font-bold text-[#2D2D2D] mb-6">Free & Private</h2>
+              <div className="text-5xl font-bold text-[#E8956B] mb-4">$0</div>
+              <p className="text-[#6B6B6B] mb-8">All tools. No account needed. Data stays on your device.</p>
+              <Link to="/dashboard">
+                <Button variant="secondary" className="mx-auto">
+                  Start Now
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl font-bold text-[#2D2D2D] mb-6">Simple, calm pricing</h2>
+              <div className="text-5xl font-bold text-[#E8956B] mb-4">$7<span className="text-xl text-[#6B6B6B]">/month</span></div>
+              <p className="text-[#6B6B6B] mb-8">Unrestricted access to all tools. Cancel anytime.</p>
+              <Link to={user ? "/dashboard" : "/signup"}>
+                <Button variant="secondary" className="mx-auto">
+                  {user ? "View Your Tools" : "Get Started Now"}
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
-        
+
         {/* Decorative background circle */}
         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-[#FAF8F5] rounded-full z-0 opacity-50" />
       </div>
