@@ -45,6 +45,20 @@ A structured 2-minute reset process. Answer a few questions, get grounded, ident
 
 *Use when:* You're in crisis mode, having a bad day, or need to reset before a meeting/call.
 
+## How Each Tool Works (AI Behavior)
+
+The AI is designed to be **warm, grounded, no corporate speak, no hype** - just human.
+
+| Tool | What the AI Does | Ending Question |
+|------|------------------|-----------------|
+| **Mind Dump** | Groups thoughts into 3-5 categories, identifies urgent vs. can-wait, spots patterns | "What feels most important to address this week?" |
+| **Find Words** | Drafts clear, kind messages in the user's voice - removes anything formal or robotic | "Does this sound like you? I can adjust the tone if needed." |
+| **Decision Helper** | Shows both sides without judgment, asks clarifying questions, never tells you what to do | "AI helps you think. But you make the decision. What feels right to you?" |
+| **Write Hard** | Drafts difficult communications with honesty + kindness, keeps your voice | "This is a draft. Adjust it to sound exactly like you. Then you have to send it - that part's on you." |
+| **Quick Reset** | Creates a 10-minute action plan, tells you what to ignore, sounds like a supportive friend | Keeps it calm and achievable |
+
+**Key principle:** The AI helps you think. It doesn't tell you what to do.
+
 ## Key Features
 
 - **Personalization Engine:** Learns your communication style, recurring themes, and stress triggers over time
