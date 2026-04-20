@@ -25,3 +25,7 @@ scripts/
 *.njsproj
 *.sln
 *.sw?
+
+.env.local
+
+package-lock.json
