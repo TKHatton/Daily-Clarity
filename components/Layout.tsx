@@ -16,13 +16,16 @@ const IconInsights = ({ size = 24, className = "" }: { size?: number, className?
 export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isLocalMode } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
+
+  // In local mode, always show logged-in nav (user is auto-set)
+  const showLoggedInNav = user || isLocalMode;
 
   return (
     <nav className="sticky top-0 z-50 bg-[#FAF8F5]/80 backdrop-blur-md border-b border-[#E5E5E5]">
@@ -33,46 +36,52 @@ export const Navbar = () => {
           </div>
           <span className="text-xl font-bold text-[#2D2D2D]">Daily Clarity</span>
         </Link>
-        
+
         <div className="hidden md:flex items-center space-x-8">
-          {user ? (
+          {showLoggedInNav ? (
             <>
-              <Link 
-                to="/dashboard" 
+              <Link
+                to="/dashboard"
                 className={`flex items-center space-x-2 font-medium transition-colors ${isActive('/dashboard') ? 'text-[#E8956B]' : 'text-[#3A3A3A] hover:text-[#E8956B]'}`}
               >
                 <IconDashboard size={18} />
                 <span>Dashboard</span>
               </Link>
-              <Link 
-                to="/insights" 
+              <Link
+                to="/insights"
                 className={`flex items-center space-x-2 font-medium transition-colors ${isActive('/insights') ? 'text-[#E8956B]' : 'text-[#3A3A3A] hover:text-[#E8956B]'}`}
               >
                 <IconInsights size={18} />
                 <span>Insights</span>
               </Link>
-              <Link 
-                to="/history" 
+              <Link
+                to="/history"
                 className={`flex items-center space-x-2 font-medium transition-colors ${isActive('/history') ? 'text-[#E8956B]' : 'text-[#3A3A3A] hover:text-[#E8956B]'}`}
               >
                 <IconHistory size={18} />
                 <span>History</span>
               </Link>
-              <Link 
-                to="/account" 
-                className={`flex items-center space-x-2 font-medium transition-colors ${isActive('/account') ? 'text-[#E8956B]' : 'text-[#3A3A3A] hover:text-[#E8956B]'}`}
-              >
-                <IconAccount size={18} />
-                <span>Account</span>
-              </Link>
-              <Button 
-                variant="text" 
-                onClick={handleLogout} 
-                className="text-sm font-semibold flex items-center space-x-2 text-[#6B6B6B]"
-              >
-                <IconLogout size={18} />
-                <span>Logout</span>
-              </Button>
+              {/* Hide Account in local mode - no real account exists */}
+              {!isLocalMode && (
+                <Link
+                  to="/account"
+                  className={`flex items-center space-x-2 font-medium transition-colors ${isActive('/account') ? 'text-[#E8956B]' : 'text-[#3A3A3A] hover:text-[#E8956B]'}`}
+                >
+                  <IconAccount size={18} />
+                  <span>Account</span>
+                </Link>
+              )}
+              {/* Hide Logout in local mode - no logout needed */}
+              {!isLocalMode && (
+                <Button
+                  variant="text"
+                  onClick={handleLogout}
+                  className="text-sm font-semibold flex items-center space-x-2 text-[#6B6B6B]"
+                >
+                  <IconLogout size={18} />
+                  <span>Logout</span>
+                </Button>
+              )}
             </>
           ) : (
             <>

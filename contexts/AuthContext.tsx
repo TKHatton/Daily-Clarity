@@ -123,11 +123,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (!isLocalMode) {
-      await supabase.auth.signOut();
+    // In local mode, logout doesn't make sense - just reload to restore user
+    if (isLocalMode) {
+      window.location.reload();
+      return;
     }
-    // In local mode, we don't really "log out" - just clear user state
-    // Data persists in localStorage for next visit
+    await supabase.auth.signOut();
     setUser(null);
   };
 
